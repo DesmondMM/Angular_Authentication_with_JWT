@@ -63,6 +63,11 @@ function userService($http, API, auth) {
     }
   }
 
+  self.logout = function() {
+    $window.localStorage.removeItem('jwtToken');
+  }
+
+
 
 
 

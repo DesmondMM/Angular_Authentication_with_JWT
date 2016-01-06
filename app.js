@@ -6,6 +6,14 @@ function authInterceptor(API, auth) {
       return config;
     },
 
+    response: function(res) {
+      if(res.config.url.indexOf(API) === 0 && res.data.token) {
+        auth.saveToken(res.data.token);
+      }
+
+    return res;
+    },
+
     // If a token was sent back, save it
     response: function(res) {
       return res;
@@ -31,6 +39,7 @@ function userService($http, API, auth) {
   }
 
   // add authentication methods here
+
   self.register = function(username, password) {
     return $http.post(API + '/auth/register', {
       username: username,

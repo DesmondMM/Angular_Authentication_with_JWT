@@ -2,21 +2,23 @@
 function authInterceptor(API, auth) {
   return {
     // automatically attach Authorization header
+
     request: function(config) {
+      var token = auth.getToken();
+      if(config.url.indexOf(API) === 0 && token) {
+        config.headers.Authorization = 'Bearer ' + token;
+      }
+
       return config;
     },
+    // If a token was sent back, save it
 
-    response: function(res) {
+     response: function(res) {
       if(res.config.url.indexOf(API) === 0 && res.data.token) {
         auth.saveToken(res.data.token);
       }
 
     return res;
-    },
-
-    // If a token was sent back, save it
-    response: function(res) {
-      return res;
     },
   }
 }
@@ -30,7 +32,30 @@ function authService($window) {
       var base64 = base64Url.replace('-', '+').replace('_', '/');
       return JSON.parse($window.atob(base64));
     }
-}
+
+
+  self.saveToken = function(token) {
+    $window.localStorage['jwtToken'] = token;
+    }
+
+  self.getToken = function() {
+    return $window.localStorage['jwtToken'];
+    }
+
+  self.isAuthed = function() {
+    var token = self.getToken();
+    if(token) {
+        var params = self.parseJwt(token);
+        return Math.round(new Date().getTime() / 1000) <= params.exp;
+    } else {
+        return false;
+    }
+  }
+
+  self.logout = function() {
+    $window.localStorage.removeItem('jwtToken');
+    }
+  }
 
 function userService($http, API, auth) {
   var self = this;
@@ -54,27 +79,6 @@ function userService($http, API, auth) {
     })
   };
 
-  self.saveToken = function(token) {
-    $window.localStorage['jwtToken'] = token;
-    }
-
-  self.getToken = function() {
-    return $window.localStorage['jwtToken'];
-    }
-
-  self.isAuthed = function() {
-    var token = self.getToken();
-    if(token) {
-        var params = self.parseJwt(token);
-        return Math.round(new Date().getTime() / 1000) <= params.exp;
-    } else {
-        return false;
-    }
-  }
-
-  self.logout = function() {
-    $window.localStorage.removeItem('jwtToken');
-  }
 
 
 
